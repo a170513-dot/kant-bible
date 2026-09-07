@@ -47,8 +47,28 @@
     <div class="button-row">
       <button id="signInBtn" class="primary-btn" type="button">로그인</button>
       <button id="signUpBtn" class="secondary-btn" type="button">계정 만들기</button>
+      <button id="forgotPasswordBtn" class="secondary-btn" type="button">비밀번호를 잊으셨나요?</button>
     </div>
     <p id="authMessage" class="status-message"></p>
+  </section>
+
+  <section id="recoveryPanel" class="admin-card" hidden>
+    <div class="kicker">PASSWORD RESET</div>
+    <h2>새 비밀번호 설정</h2>
+    <p class="muted">메일의 비밀번호 재설정 링크를 통해 들어오셨습니다. 새 비밀번호를 두 번 입력하세요.</p>
+    <div class="admin-grid two">
+      <label>새 비밀번호
+        <input id="newPassword" type="password" autocomplete="new-password" placeholder="새 비밀번호">
+      </label>
+      <label>새 비밀번호 확인
+        <input id="newPasswordConfirm" type="password" autocomplete="new-password" placeholder="한 번 더 입력">
+      </label>
+    </div>
+    <div class="button-row">
+      <button id="updatePasswordBtn" class="primary-btn" type="button">새 비밀번호 저장</button>
+      <button id="cancelRecoveryBtn" class="secondary-btn" type="button">로그인 화면으로</button>
+    </div>
+    <p id="recoveryMessage" class="status-message"></p>
   </section>
 
   <section id="notAdminPanel" class="admin-card warning-card" hidden>

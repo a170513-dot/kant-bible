@@ -7,14 +7,17 @@ const $ = (sel) => document.querySelector(sel);
 
 const configMissing = $('#configMissing');
 const authPanel = $('#authPanel');
+const recoveryPanel = $('#recoveryPanel');
 const notAdminPanel = $('#notAdminPanel');
 const adminPanel = $('#adminPanel');
 const sessionBox = $('#sessionBox');
 const authMessage = $('#authMessage');
+const recoveryMessage = $('#recoveryMessage');
 const uploadMessage = $('#uploadMessage');
 const managerMessage = $('#managerMessage');
 
 function setMessage(el, text='', type='') {
+  if (!el) return;
   el.textContent = text;
   el.className = 'status-message' + (type ? ` ${type}` : '');
 }
@@ -35,6 +38,7 @@ function extractTitle(html, filename) {
 if (!ready) {
   configMissing.hidden = false;
   authPanel.hidden = true;
+  recoveryPanel.hidden = true;
   sessionBox.textContent = 'Supabase 미연결';
 } else {
   const supabase = createClient(cfg.url, cfg.publishableKey);
@@ -42,6 +46,16 @@ if (!ready) {
   let isAdmin = false;
   let currentHtml = '';
   let allLectures = [];
+  let recoveryMode = /(?:^|[&#?])type=recovery(?:&|$)/.test(`${location.search}&${location.hash}`);
+
+  function showRecoveryPanel() {
+    recoveryMode = true;
+    authPanel.hidden = true;
+    notAdminPanel.hidden = true;
+    adminPanel.hidden = true;
+    recoveryPanel.hidden = false;
+    sessionBox.textContent = '비밀번호 재설정';
+  }
 
   async function checkAdmin() {
     if (!session?.user) return false;
@@ -58,8 +72,15 @@ if (!ready) {
   }
 
   async function refreshUI() {
+    if (recoveryMode) {
+      showRecoveryPanel();
+      return;
+    }
+
     const { data } = await supabase.auth.getSession();
     session = data.session;
+
+    recoveryPanel.hidden = true;
 
     if (!session) {
       authPanel.hidden = false;
@@ -111,6 +132,69 @@ if (!ready) {
     } else {
       setMessage(authMessage,'계정이 만들어졌습니다. 이메일 인증 메일이 왔다면 인증 후 로그인하세요.','success');
     }
+  }
+
+  async function requestPasswordReset() {
+    const email = $('#authEmail').value.trim();
+    if (!email) return setMessage(authMessage,'먼저 이메일 주소를 입력하세요.','error');
+
+    const redirectTo = `${location.origin}/admin.html`;
+    setMessage(authMessage,'비밀번호 재설정 메일을 보내는 중...');
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+    if (error) return setMessage(authMessage,error.message,'error');
+
+    setMessage(
+      authMessage,
+      '비밀번호 재설정 메일을 보냈습니다. 메일의 링크를 누르면 새 비밀번호 설정 화면으로 돌아옵니다.',
+      'success'
+    );
+  }
+
+  async function updatePassword() {
+    const password = $('#newPassword').value;
+    const confirm = $('#newPasswordConfirm').value;
+
+    if (!password || !confirm) return setMessage(recoveryMessage,'새 비밀번호를 두 번 입력하세요.','error');
+    if (password.length < 6) return setMessage(recoveryMessage,'비밀번호는 6자 이상으로 입력하세요.','error');
+    if (password !== confirm) return setMessage(recoveryMessage,'두 비밀번호가 서로 다릅니다.','error');
+
+    setMessage(recoveryMessage,'새 비밀번호를 저장하는 중...');
+    const { error } = await supabase.auth.updateUser({ password });
+
+    if (error) return setMessage(recoveryMessage,error.message,'error');
+
+    setMessage(recoveryMessage,'비밀번호를 변경했습니다. 잠시 후 로그인 화면으로 돌아갑니다.','success');
+    recoveryMode = false;
+
+    try {
+      history.replaceState({}, document.title, location.pathname);
+    } catch {}
+
+    setTimeout(async () => {
+      await supabase.auth.signOut();
+      $('#newPassword').value = '';
+      $('#newPasswordConfirm').value = '';
+      authPanel.hidden = false;
+      recoveryPanel.hidden = true;
+      notAdminPanel.hidden = true;
+      adminPanel.hidden = true;
+      sessionBox.textContent = '로그인 필요';
+      setMessage(authMessage,'새 비밀번호로 로그인하세요.','success');
+    }, 700);
+  }
+
+  async function cancelRecovery() {
+    recoveryMode = false;
+    try {
+      history.replaceState({}, document.title, location.pathname);
+    } catch {}
+    await supabase.auth.signOut();
+    recoveryPanel.hidden = true;
+    authPanel.hidden = false;
+    notAdminPanel.hidden = true;
+    adminPanel.hidden = true;
+    sessionBox.textContent = '로그인 필요';
   }
 
   async function signOut() {
@@ -280,8 +364,23 @@ if (!ready) {
   $('#lectureSearch').addEventListener('input', renderLectures);
   $('#signInBtn').addEventListener('click', signIn);
   $('#signUpBtn').addEventListener('click', signUp);
+  $('#forgotPasswordBtn').addEventListener('click', requestPasswordReset);
+  $('#updatePasswordBtn').addEventListener('click', updatePassword);
+  $('#cancelRecoveryBtn').addEventListener('click', cancelRecovery);
   $('#notAdminSignOut').addEventListener('click', signOut);
 
-  supabase.auth.onAuthStateChange(() => setTimeout(refreshUI, 0));
-  refreshUI();
+  supabase.auth.onAuthStateChange((event, newSession) => {
+    session = newSession;
+
+    if (event === 'PASSWORD_RECOVERY') {
+      recoveryMode = true;
+      setTimeout(showRecoveryPanel, 0);
+      return;
+    }
+
+    if (!recoveryMode) setTimeout(refreshUI, 0);
+  });
+
+  if (recoveryMode) showRecoveryPanel();
+  else refreshUI();
 }
