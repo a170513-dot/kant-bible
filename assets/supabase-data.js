@@ -11,6 +11,83 @@ function make(tag, className, text) {
   return el;
 }
 
+function getLectureViewer() {
+  let viewer = document.querySelector('#lectureFullscreenViewer');
+  if (viewer) return viewer;
+
+  viewer = make('div', 'lecture-fullscreen-viewer');
+  viewer.id = 'lectureFullscreenViewer';
+  viewer.hidden = true;
+  viewer.setAttribute('role', 'dialog');
+  viewer.setAttribute('aria-modal', 'true');
+  viewer.setAttribute('aria-label', '강의안 전체화면 보기');
+
+  const bar = make('div', 'lecture-fullscreen-bar');
+  const title = make('strong', 'lecture-fullscreen-title', '강의안');
+  title.id = 'lectureFullscreenTitle';
+
+  const actions = make('div', 'lecture-fullscreen-actions');
+
+  const browserFullscreenBtn = make('button', 'lecture-fullscreen-btn', '⛶ 브라우저 전체화면');
+  browserFullscreenBtn.type = 'button';
+  browserFullscreenBtn.addEventListener('click', async () => {
+    try {
+      if (!document.fullscreenElement && viewer.requestFullscreen) {
+        await viewer.requestFullscreen();
+      } else if (document.fullscreenElement && document.exitFullscreen) {
+        await document.exitFullscreen();
+      }
+    } catch (error) {
+      console.warn('KANT BIBLE: fullscreen request failed', error);
+    }
+  });
+
+  const closeBtn = make('button', 'lecture-fullscreen-close', '✕ 닫기');
+  closeBtn.type = 'button';
+
+  actions.append(browserFullscreenBtn, closeBtn);
+  bar.append(title, actions);
+
+  const frame = document.createElement('iframe');
+  frame.id = 'lectureFullscreenFrame';
+  frame.className = 'lecture-fullscreen-frame';
+  frame.setAttribute('sandbox', '');
+  frame.setAttribute('referrerpolicy', 'no-referrer');
+
+  viewer.append(bar, frame);
+  document.body.append(viewer);
+
+  function closeViewer() {
+    viewer.hidden = true;
+    frame.removeAttribute('srcdoc');
+    document.body.classList.remove('lecture-viewer-open');
+
+    if (document.fullscreenElement && document.exitFullscreen) {
+      document.exitFullscreen().catch(() => {});
+    }
+  }
+
+  closeBtn.addEventListener('click', closeViewer);
+
+  viewer.addEventListener('click', (event) => {
+    if (event.target === viewer) closeViewer();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !viewer.hidden) closeViewer();
+  });
+
+  viewer.openLecture = (lectureTitle, html) => {
+    title.textContent = lectureTitle || '강의안';
+    frame.srcdoc = html || '';
+    viewer.hidden = false;
+    document.body.classList.add('lecture-viewer-open');
+    closeBtn.focus();
+  };
+
+  return viewer;
+}
+
 if (ready) {
   const supabase = createClient(cfg.url, cfg.publishableKey);
 
@@ -65,22 +142,20 @@ if (ready) {
     }
 
     host.replaceChildren();
+    const viewer = getLectureViewer();
+
     for (const row of data) {
       const article = make('article','lecture-item');
       article.append(make('strong','',row.title));
       if (row.summary) article.append(make('p','',row.summary));
 
       if (row.content_html) {
-        const details = make('details');
-        const summary = make('summary','','강의안 펼치기');
-        const frame = document.createElement('iframe');
-        frame.className = 'lecture-frame';
-        frame.setAttribute('sandbox','');
-        frame.setAttribute('referrerpolicy','no-referrer');
-        frame.loading = 'lazy';
-        frame.srcdoc = row.content_html;
-        details.append(summary, frame);
-        article.append(details);
+        const openBtn = make('button', 'lecture-open-fullscreen', '강의안 펼치기 ⛶');
+        openBtn.type = 'button';
+        openBtn.addEventListener('click', () => {
+          viewer.openLecture(row.title, row.content_html);
+        });
+        article.append(openBtn);
       }
       host.append(article);
     }

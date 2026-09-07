@@ -89,3 +89,90 @@ footer{border-top:1px solid rgba(122,67,40,.16);padding:30px 24px 50px;text-alig
 .lecture-html{margin-top:14px;line-height:1.8}
 
 .lecture-frame{display:block;width:100%;min-height:760px;border:1px solid var(--line);border-radius:14px;background:#fff;margin-top:14px}
+
+/* 강의안 전체화면 보기 */
+.lecture-open-fullscreen{
+  width:100%;
+  margin-top:14px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:12px 15px;
+  background:rgba(255,255,255,.55);
+  color:var(--accent);
+  font:700 15px inherit;
+  cursor:pointer;
+}
+.lecture-open-fullscreen:hover{
+  background:rgba(122,67,40,.09);
+  border-color:rgba(122,67,40,.45);
+}
+body.lecture-viewer-open{overflow:hidden}
+.lecture-fullscreen-viewer{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  background:#fff;
+  display:grid;
+  grid-template-rows:auto 1fr;
+  width:100vw;
+  height:100dvh;
+}
+.lecture-fullscreen-viewer[hidden]{display:none}
+.lecture-fullscreen-bar{
+  min-height:58px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:10px 16px;
+  border-bottom:1px solid rgba(122,67,40,.18);
+  background:rgba(247,240,223,.96);
+}
+.lecture-fullscreen-title{
+  min-width:0;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  font-size:16px;
+}
+.lecture-fullscreen-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-shrink:0;
+}
+.lecture-fullscreen-btn,
+.lecture-fullscreen-close{
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:9px 12px;
+  background:#fff;
+  color:var(--ink);
+  font:700 14px inherit;
+  cursor:pointer;
+}
+.lecture-fullscreen-close{
+  color:var(--accent);
+}
+.lecture-fullscreen-frame{
+  display:block;
+  width:100%;
+  height:100%;
+  min-height:0;
+  border:0;
+  background:#fff;
+}
+@media (max-width:640px){
+  .lecture-fullscreen-bar{
+    padding:8px 10px;
+  }
+  .lecture-fullscreen-title{
+    font-size:14px;
+  }
+  .lecture-fullscreen-btn{
+    display:none;
+  }
+  .lecture-fullscreen-close{
+    padding:9px 10px;
+  }
+}
