@@ -3,6 +3,6 @@
 // publishable key(또는 anon key)는 브라우저에서 쓰는 공개용 키입니다.
 // 실제 보안은 Supabase RLS 정책으로 통제합니다.
 window.KANT_SUPABASE = {
-  url: "",
-  publishableKey: ""
+  url: "https://yikhpsayxzbxwcpjhfhz.supabase.co",
+  publishableKey: "sb_publishable_E-Ou72Q0D8guheIqnK2fzg_yxZMWw8m"
 };
