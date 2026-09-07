@@ -87,3 +87,5 @@ footer{border-top:1px solid rgba(122,67,40,.16);padding:30px 24px 50px;text-alig
 .lecture-item details{margin-top:14px}
 .lecture-item summary{cursor:pointer;color:var(--accent);font-weight:700}
 .lecture-html{margin-top:14px;line-height:1.8}
+
+.lecture-frame{display:block;width:100%;min-height:760px;border:1px solid var(--line);border-radius:14px;background:#fff;margin-top:14px}

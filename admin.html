@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KANT BIBLE 관리자</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/admin.css">
+</head>
+<body class="admin-body">
+<header class="topbar">
+  <nav class="nav">
+    <a class="brand" href="index.html">KANT BIBLE</a>
+    <div class="navlinks">
+      <a href="index.html">사이트 보기</a>
+      <a href="admin.html">관리자</a>
+    </div>
+  </nav>
+</header>
+
+<main class="admin-shell">
+  <section class="admin-hero">
+    <div>
+      <div class="kicker">KANT BIBLE · ADMIN</div>
+      <h1>강의안 관리</h1>
+      <p>HTML 강의안을 업로드하고, 공개·비공개 전환과 삭제를 할 수 있습니다.</p>
+    </div>
+    <div id="sessionBox" class="session-box"></div>
+  </section>
+
+  <section id="configMissing" class="admin-card warning-card" hidden>
+    <h2>Supabase 연결이 아직 안 됐습니다</h2>
+    <p><code>assets/supabase-config.js</code>에 Project URL과 Publishable key를 입력해야 합니다.</p>
+  </section>
+
+  <section id="authPanel" class="admin-card" hidden>
+    <h2>관리자 로그인</h2>
+    <p class="muted">Supabase Authentication에 등록된 관리자 계정으로 로그인하세요.</p>
+    <div class="admin-grid two">
+      <label>이메일
+        <input id="authEmail" type="email" autocomplete="email" placeholder="name@example.com">
+      </label>
+      <label>비밀번호
+        <input id="authPassword" type="password" autocomplete="current-password" placeholder="비밀번호">
+      </label>
+    </div>
+    <div class="button-row">
+      <button id="signInBtn" class="primary-btn" type="button">로그인</button>
+      <button id="signUpBtn" class="secondary-btn" type="button">계정 만들기</button>
+    </div>
+    <p id="authMessage" class="status-message"></p>
+  </section>
+
+  <section id="notAdminPanel" class="admin-card warning-card" hidden>
+    <h2>관리자 권한이 없습니다</h2>
+    <p>로그인은 되었지만 <code>admins</code> 표에 이 이메일이 등록되어 있지 않습니다.</p>
+    <button id="notAdminSignOut" class="secondary-btn" type="button">로그아웃</button>
+  </section>
+
+  <div id="adminPanel" hidden>
+    <section class="admin-card">
+      <div class="card-title-row">
+        <div>
+          <div class="kicker">UPLOAD</div>
+          <h2>HTML 강의안 업로드</h2>
+        </div>
+        <span class="badge">.html / .htm</span>
+      </div>
+
+      <form id="uploadForm">
+        <div class="admin-grid two">
+          <label>성경책
+            <select id="bookSelect" required></select>
+          </label>
+          <label>HTML 파일
+            <input id="htmlFile" type="file" accept=".html,.htm,text/html" required>
+          </label>
+        </div>
+        <label>강의 제목
+          <input id="lectureTitle" type="text" required placeholder="예: 누가복음 1–4장">
+        </label>
+        <label>짧은 설명
+          <textarea id="lectureSummary" rows="3" placeholder="강의안에 대한 짧은 설명"></textarea>
+        </label>
+        <label class="check-row">
+          <input id="publishNow" type="checkbox" checked>
+          <span>업로드 즉시 공개</span>
+        </label>
+
+        <div id="fileInfo" class="file-info" hidden></div>
+
+        <details id="previewBox" class="preview-box" hidden>
+          <summary>업로드 전 미리보기</summary>
+          <iframe id="previewFrame" class="lecture-frame preview-frame" sandbox="" referrerpolicy="no-referrer"></iframe>
+        </details>
+
+        <div class="button-row">
+          <button id="uploadBtn" class="primary-btn" type="submit">강의안 업로드</button>
+          <button id="resetBtn" class="secondary-btn" type="button">입력 지우기</button>
+        </div>
+        <p id="uploadMessage" class="status-message"></p>
+      </form>
+    </section>
+
+    <section class="admin-card">
+      <div class="card-title-row">
+        <div>
+          <div class="kicker">MANAGE</div>
+          <h2>등록된 강의안</h2>
+        </div>
+        <button id="refreshLectures" class="secondary-btn" type="button">새로고침</button>
+      </div>
+      <div class="admin-grid two">
+        <label>책으로 필터
+          <select id="filterBook">
+            <option value="">전체 책</option>
+          </select>
+        </label>
+        <label>검색
+          <input id="lectureSearch" type="search" placeholder="제목 또는 파일명 검색">
+        </label>
+      </div>
+      <div id="lectureManager" class="manager-list"></div>
+      <p id="managerMessage" class="status-message"></p>
+    </section>
+  </div>
+</main>
+
+<script src="assets/supabase-config.js"></script>
+<script type="module" src="assets/admin.js"></script>
+</body>
+</html>

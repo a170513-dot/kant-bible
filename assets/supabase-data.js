@@ -4,10 +4,11 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const cfg = window.KANT_SUPABASE || {};
 const ready = Boolean(cfg.url && cfg.publishableKey);
 
-function escapeHtml(value='') {
-  return String(value)
-    .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
-    .replaceAll('"','&quot;').replaceAll("'","&#039;");
+function make(tag, className, text) {
+  const el = document.createElement(tag);
+  if (className) el.className = className;
+  if (text !== undefined && text !== null) el.textContent = text;
+  return el;
 }
 
 if (ready) {
@@ -30,13 +31,14 @@ if (ready) {
     }
     if (!data?.length) return;
 
-    host.innerHTML = data.map(row => `
-      <article class="lecture-item">
-        <small>${escapeHtml(row.book_slug || '성경')}</small>
-        <strong>${escapeHtml(row.title)}</strong>
-        <p>${escapeHtml(row.summary || '')}</p>
-      </article>
-    `).join('');
+    host.replaceChildren();
+    for (const row of data) {
+      const article = make('article','lecture-item');
+      article.append(make('small','',row.book_slug || '성경'));
+      article.append(make('strong','',row.title));
+      if (row.summary) article.append(make('p','',row.summary));
+      host.append(article);
+    }
     document.querySelector('#recentLecturesSection')?.removeAttribute('hidden');
   }
 
@@ -47,7 +49,7 @@ if (ready) {
 
     const { data, error } = await supabase
       .from('lectures')
-      .select('id,title,summary,content_html,updated_at')
+      .select('id,title,summary,content_html,updated_at,source_filename')
       .eq('book_slug', slug)
       .eq('is_published', true)
       .order('updated_at', { ascending: false });
@@ -58,17 +60,30 @@ if (ready) {
     }
 
     if (!data?.length) {
-      host.innerHTML = '<div class="placeholder">아직 Supabase에 등록된 공개 강의안이 없습니다.</div>';
+      host.innerHTML = '<div class="placeholder">아직 등록된 공개 강의안이 없습니다.</div>';
       return;
     }
 
-    host.innerHTML = data.map(row => `
-      <article class="lecture-item">
-        <strong>${escapeHtml(row.title)}</strong>
-        ${row.summary ? `<p>${escapeHtml(row.summary)}</p>` : ''}
-        ${row.content_html ? `<details><summary>강의안 펼치기</summary><div class="lecture-html">${row.content_html}</div></details>` : ''}
-      </article>
-    `).join('');
+    host.replaceChildren();
+    for (const row of data) {
+      const article = make('article','lecture-item');
+      article.append(make('strong','',row.title));
+      if (row.summary) article.append(make('p','',row.summary));
+
+      if (row.content_html) {
+        const details = make('details');
+        const summary = make('summary','','강의안 펼치기');
+        const frame = document.createElement('iframe');
+        frame.className = 'lecture-frame';
+        frame.setAttribute('sandbox','');
+        frame.setAttribute('referrerpolicy','no-referrer');
+        frame.loading = 'lazy';
+        frame.srcdoc = row.content_html;
+        details.append(summary, frame);
+        article.append(details);
+      }
+      host.append(article);
+    }
   }
 
   loadRecentLectures();
